@@ -1,12 +1,12 @@
 import './App.css'
-import { Routes,Route } from 'react-router-dom'
-import TailwindPage from './pages/Home'
+import { Routes,Route } from 'react-router-dom';
+import SidebarPage from './pages/Dashboard/SidebarPage'
 function App() {
 
   return (
     <>
       <Routes>
-          
+          <Route path='/' element={<SidebarPage/>}/>
       </Routes>
     </>
   )
