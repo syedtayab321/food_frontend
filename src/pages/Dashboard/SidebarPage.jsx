@@ -6,7 +6,7 @@ import OrdersManagementPage from './../SideBarSections/OrdersManagement';
 import ProfileManagementPage from './../SideBarSections/ProfileManagement';
 import ReviewsPage from './../SideBarSections/ReviewsPage';
 import CustomersPage from './../SideBarSections/CustomersPage';
-import Reservations from './../SideBarSections/Reservations';
+import ReservationPage from './../SideBarSections/ReservationPage';
 import ReportsDashboard from "./../SideBarSections/ReportsDashboard";
 
 const SidebarPage = () => {
@@ -37,7 +37,7 @@ const SidebarPage = () => {
           {selectedSection === "dashboard" && <HomePage />}
           {selectedSection === "menu" && <MenuManagementPage />}
           {selectedSection === "orders" && <OrdersManagementPage />}
-          {selectedSection === "reservations" && <Reservations />}
+          {selectedSection === "reservations" && <ReservationPage />}
           {selectedSection === "reports" && <ReportsDashboard />}
           {selectedSection === "profile" && <ProfileManagementPage />}
           {selectedSection === "reviews" && <ReviewsPage/>}

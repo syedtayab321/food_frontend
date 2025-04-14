@@ -2,7 +2,7 @@ import { useState } from 'react';
 import CustomerHeader from './../../components/CustomerComponents/CustomerHeader';
 import CustomerFilter from './../../components/CustomerComponents/CustomerFilter';
 import CustomerList from './../../components/CustomerComponents/CustomerList';
-import MessageModal from './../../Models/Common/MessageModal';
+import MessageModal from './../../Models/MessageModals/MessageModal';
 
 const CustomersPage = () => {
   // Sample customers data
