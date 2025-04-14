@@ -1,19 +1,17 @@
 import './App.css'
 import { Routes,Route } from 'react-router-dom';
 import SidebarPage from './pages/Dashboard/SidebarPage'
-import LogoutModal from './Models/Common/LogoutModal';
-import VendorSignup from './pages/signupPage';
-import VendorLogin from './pages/LoginPage';
+import VendorSignup from './pages/Auth/signupPage';
+import VendorLogin from './pages/Auth/LoginPage';
 
 function App() {
 
   return (
     <>
       <Routes>
-          <Route path='/' element={<SidebarPage/>}/>
-          <Route path='/logout' element={<LogoutModal/>}/>
+          <Route path='/dashboard' element={<SidebarPage/>}/>
           <Route path='/signup' element={<VendorSignup/>}/>
-          <Route path='/login' element={<VendorLogin/>}/>
+          <Route path='/' element={<VendorLogin/>}/>
           {/* Add more routes as needed */}
       </Routes>
     </>
