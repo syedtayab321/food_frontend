@@ -1,5 +1,6 @@
 import { FaCalendarAlt, FaChartLine } from 'react-icons/fa';
 import { DateRange } from 'react-date-range';
+import React, { useState } from 'react';
 
 const ReportFilters = ({ filters, onFilterChange }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
