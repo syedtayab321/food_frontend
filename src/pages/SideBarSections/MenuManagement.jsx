@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaSearch, FaPlus, FaEdit, FaTrash, FaHamburger, FaPizzaSlice, FaIceCream, FaWineGlassAlt,FaUtensils } from 'react-icons/fa';
-import AddItemModal from './../../Models/ProductRelated/AddItemModal'
+import AddItemModal from './../../Models/ProductRelated/AddItemModal';
 const MenuManagementPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
