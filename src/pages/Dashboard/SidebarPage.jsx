@@ -8,6 +8,7 @@ import ReviewsPage from './../SideBarSections/ReviewsPage';
 import CustomersPage from './../SideBarSections/CustomersPage';
 import Reservations from './../SideBarSections/Reservations';
 import ReportsDashboard from "./../SideBarSections/ReportsDashboard";
+import StaffManagement from "../SideBarSections/StaffManagement";
 
 const SidebarPage = () => {
   const [selectedSection, setSelectedSection] = useState("dashboard");
@@ -38,6 +39,7 @@ const SidebarPage = () => {
           {selectedSection === "menu" && <MenuManagementPage />}
           {selectedSection === "orders" && <OrdersManagementPage />}
           {selectedSection === "reservations" && <Reservations />}
+          {selectedSection === "staff" && <StaffManagement />}
           {selectedSection === "reports" && <ReportsDashboard />}
           {selectedSection === "profile" && <ProfileManagementPage />}
           {selectedSection === "reviews" && <ReviewsPage/>}
