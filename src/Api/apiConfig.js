@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base URL for your API
-const BASE_URL = 'https://your-api-domain.com/api/v1';
+const BASE_URL = 'https://xavics.pythonanywhere.com/';
 
 // Create axios instance with base URL
 const api = axios.create({
