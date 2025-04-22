@@ -16,6 +16,8 @@ import {
   FaPersonBooth
 } from "react-icons/fa";
 import LogoutModal from './../../Models/Common/LogoutModal';
+import { useDispatch } from 'react-redux';
+import { logout } from './../../Services/Auth/authSlice';
 
 const navItems = [
   { text: "Dashboard", icon: FaHome, link: "dashboard" },
@@ -34,6 +36,7 @@ const Sidebar = ({ onSelect, isOpen, setIsOpen }) => {
   const [activeItem, setActiveItem] = useState("dashboard");
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleClick = (link) => {
     setActiveItem(link);
@@ -41,6 +44,7 @@ const Sidebar = ({ onSelect, isOpen, setIsOpen }) => {
   };
 
   const handleLogout = async() => {
+    dispatch(logout());
     navigate("/");
     setIsLogoutOpen(false);
   };

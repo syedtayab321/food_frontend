@@ -2,7 +2,7 @@ import React from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { FaEnvelope, FaLock, FaArrowRight } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 
 const VendorLogin = () => {
   const initialValues = {
@@ -107,9 +107,9 @@ const VendorLogin = () => {
                       </label>
                     </div>
                     <div className="text-sm">
-                      <a href="#" className="font-medium text-red-600 hover:text-red-500">
+                      <Link to='/forgot-password' className="font-medium text-red-600 hover:text-red-500">
                         Forgot password?
-                      </a>
+                      </Link>
                     </div>
                   </div>
 
