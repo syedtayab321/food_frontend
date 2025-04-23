@@ -1,74 +1,69 @@
-import React, { useState } from "react";
-import OrdersHeader from "./../../components/OrdersComponents/OrdersHeader";
-import OrdersFilter from "./../../components/OrdersComponents/OrderFilters";
-import OrdersTable from "./../../components/OrdersComponents/OrderTable";
-import Pagination from "./../../components/OrdersComponents/OrderPagination";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import OrdersHeader from "../../components/OrdersComponents/OrdersHeader";
+import OrdersFilter from "../../components/OrdersComponents/OrderFilters";
+import OrdersTable from "../../components/OrdersComponents/OrderTable";
+import Pagination from "../../components/OrdersComponents/OrderPagination";
+import { fetchVendorOrders, updateOrderStatus } from "../../Services/Orders/ordersSlice";
+
 
 const OrdersPage = () => {
-  // Sample orders data (would normally come from API)
-  const allOrders = [
-    { id: "#ORD-1024", customer: "Alex Johnson", items: 3, total: "$42.50", status: "Preparing", time: "12:30 PM" },
-    { id: "#ORD-1023", customer: "Sarah Miller", items: 2, total: "$28.75", status: "Ready", time: "12:15 PM" },
-    // ... more orders (would have at least 20+ in real app)
-  ];
+  const dispatch = useDispatch();
+  const { orders, loading } = useSelector((state) => state.orders);
 
-  // State management
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
 
-  // Filter orders
-  const filteredOrders = allOrders.filter(order => {
-    const matchesSearch = order.customer.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         order.id.toLowerCase().includes(searchQuery.toLowerCase());
+  // ✅ Auto-fetch orders from API on component mount
+  useEffect(() => {
+    dispatch(fetchVendorOrders());
+  }, [dispatch]);
+
+  // Filtered + paginated orders (frontend-only)
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch =
+      order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.id.toString().toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  // Pagination logic
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
 
-  // Update order status
-  const updateStatus = (orderId, newStatus) => {
-    // In a real app, this would call an API
-    console.log(`Updating order ${orderId} to status ${newStatus}`);
-  };
-
-  // Refresh orders
-  const refreshOrders = () => {
-    setIsRefreshing(true);
-    // Simulate API refresh
-    setTimeout(() => setIsRefreshing(false), 1000);
+  const handleStatusUpdate = ({ orderId, status }) => {
+    dispatch(updateOrderStatus({ orderId, status })).then(() => {
+      dispatch(fetchVendorOrders());
+    });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <OrdersHeader 
-        title="Orders Management" 
+      <OrdersHeader
+        title="Orders Management"
         description="Track and manage customer orders"
-        onRefresh={refreshOrders}
-        isRefreshing={isRefreshing}
+        onRefresh={() => dispatch(fetchVendorOrders())}
+        isRefreshing={loading}
       />
-      
-      <OrdersFilter 
+
+      <OrdersFilter
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
       />
 
-      <OrdersTable 
+      <OrdersTable
         orders={currentOrders}
-        onStatusUpdate={updateStatus}
+        onStatusUpdate={handleStatusUpdate}
       />
 
       {filteredOrders.length > ordersPerPage && (
-        <Pagination 
+        <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
