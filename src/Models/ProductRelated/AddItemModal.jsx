@@ -1,71 +1,124 @@
-import React, { useState } from "react";
-import { FaTimes, FaUpload, FaPlus, FaSpinner, FaInfoCircle } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaTimes, FaUpload, FaPlus, FaSpinner, FaSave, FaInfoCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import { selectAllCategories } from "./../../Services/MenuItems/categorySlice";
 
-const AddItemModal = ({ isOpen, onClose, onAddItem }) => {
+const AddItemModal = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  initialData = null,
+  isEditing = false 
+}) => {
+  // Get categories from Redux store
+  const categories = useSelector(selectAllCategories);
+  const availableCategories = categories.filter(cat => cat.id !== 'all');
+
+  // Form state
   const [formData, setFormData] = useState({
-    name: "",
-    category: "main",
-    price: "",
-    cost: "",
+    title: "",
     description: "",
-    preparationTime: "",
-    calories: "",
-    isVegetarian: false,
-    isVegan: false,
-    isGlutenFree: false,
-    ingredients: "",
-    image: null,
+    unit_price: "",
+    inventory: 10,  // Default to 10 as per your API data
+    category: availableCategories.length > 0 ? availableCategories[0].id : "",
+    images: []
   });
 
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Categories for dropdown
-  const categories = [
-    { id: "appetizer", name: "Appetizer" },
-    { id: "main", name: "Main Course" },
-    { id: "dessert", name: "Dessert" },
-    { id: "drinks", name: "Drinks" },
-    { id: "sides", name: "Sides" },
-  ];
-
-  // Dietary options
-  const dietaryOptions = [
-    { id: "isVegetarian", name: "Vegetarian" },
-    { id: "isVegan", name: "Vegan" },
-    { id: "isGlutenFree", name: "Gluten-Free" },
-  ];
+  // Initialize form with data when editing
+  useEffect(() => {
+    if (isEditing && initialData) {
+      setFormData({
+        title: initialData.title || "",
+        description: initialData.description || "",
+        unit_price: initialData.unit_price || "",
+        inventory: initialData.inventory || 10,
+        category: initialData.category || (availableCategories.length > 0 ? availableCategories[0].id : ""),
+        images: initialData.images || []
+      });
+      setImagePreviews(initialData.images.map(img => img.image));
+    } else {
+      // Reset form when adding new item
+      setFormData({
+        title: "",
+        description: "",
+        unit_price: "",
+        inventory: 10,
+        category: availableCategories.length > 0 ? availableCategories[0].id : "",
+        images: []
+      });
+      setImagePreviews([]);
+    }
+  }, [isEditing, initialData]);
 
   // Handle input changes
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     });
     setErrors({ ...errors, [name]: "" });
   };
 
+  // Handle number input changes
+  const handleNumberChange = (e) => {
+    const { name, value } = e.target;
+    // For price, keep as string to allow decimal input
+    if (name === 'unit_price') {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    } else {
+      // For inventory, convert to number
+      setFormData({
+        ...formData,
+        [name]: value === "" ? "" : Number(value),
+      });
+    }
+  };
+
   // Handle image upload
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData({ ...formData, image: file });
-      setImagePreview(URL.createObjectURL(file));
-    }
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const newImages = files.map(file => ({
+      id: Date.now(), // Temporary ID
+      image: URL.createObjectURL(file),
+      file // Store the actual file for upload
+    }));
+
+    setFormData({
+      ...formData,
+      images: [...formData.images, ...newImages]
+    });
+    setImagePreviews([...imagePreviews, ...newImages.map(img => img.image)]);
+  };
+
+  // Remove image
+  const handleRemoveImage = (index) => {
+    const newImages = [...formData.images];
+    newImages.splice(index, 1);
+    setFormData({ ...formData, images: newImages });
+    setImagePreviews(newImages.map(img => img.image));
   };
 
   // Form validation
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.price) newErrors.price = "Price is required";
-    if (isNaN(formData.price)) newErrors.price = "Price must be a number";
-    if (!formData.cost) newErrors.cost = "Cost is required";
-    if (isNaN(formData.cost)) newErrors.cost = "Cost must be a number";
-    if (!formData.image) newErrors.image = "Image is required";
+    if (!formData.title.trim()) newErrors.title = "Title is required";
+    if (!formData.unit_price) newErrors.unit_price = "Price is required";
+    if (isNaN(Number(formData.unit_price))) newErrors.unit_price = "Price must be a number";
+    if (Number(formData.unit_price) <= 0) newErrors.unit_price = "Price must be greater than 0";
+    if (formData.inventory < 0) newErrors.inventory = "Inventory cannot be negative";
+    if (!formData.category) newErrors.category = "Category is required";
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -77,13 +130,33 @@ const AddItemModal = ({ isOpen, onClose, onAddItem }) => {
 
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      onAddItem(formData);
-      toast.success("Item added successfully!");
-      setIsLoading(false);
-      onClose();
-    }, 1500);
+    // Prepare the data to be saved (matches your API structure)
+    const itemData = {
+      title: formData.title,
+      description: formData.description,
+      unit_price: formData.unit_price, // Keep as string for API
+      inventory: formData.inventory,
+      category: formData.category,
+      // For new images, we'll need to handle file upload separately
+      // Existing images will have their URLs
+      images: formData.images.map(img => ({
+        id: img.id || undefined, // Only include id if it exists (editing)
+        image: img.file ? img.file : img.image // Keep existing images as is
+      }))
+    };
+
+    // Call the save handler (add or update)
+    onSave(itemData)
+      .then(() => {
+        toast.success(`Item ${isEditing ? 'updated' : 'added'} successfully!`);
+        onClose();
+      })
+      .catch((error) => {
+        toast.error(`Failed to ${isEditing ? 'update' : 'add'} item: ${error.message}`);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   if (!isOpen) return null;
@@ -93,8 +166,13 @@ const AddItemModal = ({ isOpen, onClose, onAddItem }) => {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
         <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-red-600">Add New Menu Item</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-red-600">
+          <h2 className="text-xl font-bold text-red-600">
+            {isEditing ? "Edit Menu Item" : "Add New Menu Item"}
+          </h2>
+          <button 
+            onClick={onClose} 
+            className="text-gray-500 hover:text-red-600 transition"
+          >
             <FaTimes size={20} />
           </button>
         </div>
@@ -111,18 +189,18 @@ const AddItemModal = ({ isOpen, onClose, onAddItem }) => {
                   Basic Information
                 </h3>
                 
-                {/* Name */}
+                {/* Title */}
                 <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Item Name*</label>
+                  <label className="block text-gray-700 mb-2">Title*</label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
+                    name="title"
+                    value={formData.title}
                     onChange={handleChange}
-                    className={`w-full p-2 border rounded-lg ${errors.name ? "border-red-500" : "border-gray-300"}`}
-                    placeholder="e.g., Margherita Pizza"
+                    className={`w-full p-2 border rounded-lg ${errors.title ? "border-red-500" : "border-gray-300"}`}
+                    placeholder="e.g., Aloo, Burger"
                   />
-                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                  {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
                 </div>
 
                 {/* Category */}
@@ -132,14 +210,15 @@ const AddItemModal = ({ isOpen, onClose, onAddItem }) => {
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    className={`w-full p-2 border rounded-lg ${errors.category ? "border-red-500" : "border-gray-300"}`}
                   >
-                    {categories.map((cat) => (
+                    {availableCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}
                       </option>
                     ))}
                   </select>
+                  {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
                 </div>
 
                 {/* Description */}
@@ -151,55 +230,43 @@ const AddItemModal = ({ isOpen, onClose, onAddItem }) => {
                     onChange={handleChange}
                     className="w-full p-2 border border-gray-300 rounded-lg"
                     rows="3"
-                    placeholder="e.g., Fresh mozzarella, tomato sauce, basil"
-                  ></textarea>
-                </div>
-
-                {/* Ingredients */}
-                <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Ingredients</label>
-                  <textarea
-                    name="ingredients"
-                    value={formData.ingredients}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    rows="2"
-                    placeholder="List main ingredients, separated by commas"
+                    placeholder="Describe the menu item..."
                   ></textarea>
                 </div>
               </div>
 
-              {/* Pricing */}
+              {/* Pricing & Inventory */}
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-700 mb-3">Pricing</h3>
+                <h3 className="font-semibold text-gray-700 mb-3">Pricing & Inventory</h3>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Price */}
+                  {/* Unit Price */}
                   <div>
                     <label className="block text-gray-700 mb-2">Price ($)*</label>
                     <input
                       type="text"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleChange}
-                      className={`w-full p-2 border rounded-lg ${errors.price ? "border-red-500" : "border-gray-300"}`}
-                      placeholder="12.99"
+                      name="unit_price"
+                      value={formData.unit_price}
+                      onChange={handleNumberChange}
+                      className={`w-full p-2 border rounded-lg ${errors.unit_price ? "border-red-500" : "border-gray-300"}`}
+                      placeholder="e.g., 20.00"
                     />
-                    {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+                    {errors.unit_price && <p className="text-red-500 text-sm mt-1">{errors.unit_price}</p>}
                   </div>
 
-                  {/* Cost */}
+                  {/* Inventory */}
                   <div>
-                    <label className="block text-gray-700 mb-2">Cost ($)*</label>
+                    <label className="block text-gray-700 mb-2">Inventory*</label>
                     <input
-                      type="text"
-                      name="cost"
-                      value={formData.cost}
-                      onChange={handleChange}
-                      className={`w-full p-2 border rounded-lg ${errors.cost ? "border-red-500" : "border-gray-300"}`}
-                      placeholder="5.50"
+                      type="number"
+                      name="inventory"
+                      value={formData.inventory}
+                      onChange={handleNumberChange}
+                      className={`w-full p-2 border rounded-lg ${errors.inventory ? "border-red-500" : "border-gray-300"}`}
+                      min="0"
+                      required
                     />
-                    {errors.cost && <p className="text-red-500 text-sm mt-1">{errors.cost}</p>}
+                    {errors.inventory && <p className="text-red-500 text-sm mt-1">{errors.inventory}</p>}
                   </div>
                 </div>
               </div>
@@ -209,82 +276,48 @@ const AddItemModal = ({ isOpen, onClose, onAddItem }) => {
             <div className="space-y-4">
               {/* Image Upload */}
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-700 mb-3">Item Image*</h3>
-                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4">
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-48 object-cover rounded-lg mb-2"
-                    />
-                  ) : (
-                    <FaUpload className="text-gray-400 text-4xl mb-2" />
+                <h3 className="font-semibold text-gray-700 mb-3">Images</h3>
+                <div className="space-y-4">
+                  {/* Image Preview Grid */}
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                          >
+                            <FaTimes size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                    id="image-upload"
-                  />
-                  <label
-                    htmlFor="image-upload"
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 cursor-pointer"
-                  >
-                    {imagePreview ? "Change Image" : "Upload Image"}
-                  </label>
-                  {errors.image && <p className="text-red-500 text-sm mt-2">{errors.image}</p>}
-                </div>
-              </div>
 
-              {/* Dietary Information */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-700 mb-3">Dietary Information</h3>
-                <div className="space-y-2">
-                  {dietaryOptions.map((option) => (
-                    <label key={option.id} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        name={option.id}
-                        checked={formData[option.id]}
-                        onChange={handleChange}
-                        className="h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500"
-                      />
-                      <span className="text-gray-700">{option.name}</span>
+                  {/* Upload Button */}
+                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    <FaUpload className="text-gray-400 text-4xl mb-2" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                      id="image-upload"
+                      multiple
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 cursor-pointer transition"
+                    >
+                      Upload Images
                     </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Additional Details */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-700 mb-3">Additional Details</h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Preparation Time */}
-                  <div>
-                    <label className="block text-gray-700 mb-2">Prep Time (mins)</label>
-                    <input
-                      type="number"
-                      name="preparationTime"
-                      value={formData.preparationTime}
-                      onChange={handleChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                      placeholder="15"
-                    />
-                  </div>
-
-                  {/* Calories */}
-                  <div>
-                    <label className="block text-gray-700 mb-2">Calories</label>
-                    <input
-                      type="number"
-                      name="calories"
-                      value={formData.calories}
-                      onChange={handleChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                      placeholder="350"
-                    />
+                    <p className="text-gray-500 text-sm mt-2">JPEG, PNG (Max 5MB each)</p>
                   </div>
                 </div>
               </div>
@@ -296,14 +329,14 @@ const AddItemModal = ({ isOpen, onClose, onAddItem }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:bg-red-400"
+              className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:bg-red-400 transition"
             >
               {isLoading ? (
                 <>
@@ -311,7 +344,8 @@ const AddItemModal = ({ isOpen, onClose, onAddItem }) => {
                 </>
               ) : (
                 <>
-                  <FaPlus /> Add Item
+                  {isEditing ? <FaSave /> : <FaPlus />}
+                  {isEditing ? "Update Item" : "Add Item"}
                 </>
               )}
             </button>

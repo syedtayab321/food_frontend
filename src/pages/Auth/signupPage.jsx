@@ -5,11 +5,12 @@ import { FaEnvelope, FaLock, FaCheck } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { signupUser } from './../../Services/Auth/authSlice'; 
 import { CircularProgress } from '@mui/material';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const VendorSignup = () => {
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state) => state.auth);
+  const { loading, error, isSuccess } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
   // Form validation schema
@@ -83,6 +84,30 @@ const VendorSignup = () => {
     </div>
   );
 
+  // Handle form submission
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    try {
+      const result = await dispatch(signupUser({
+        email: values.email,
+        password: values.password,
+        re_password: values.confirmPassword
+      }));
+
+      if (signupUser.fulfilled.match(result)) {
+        toast.success('Account created successfully! Please verify your email.');
+        resetForm();
+        navigate(`/verify-otp/${values.email}`);
+      } else if (signupUser.rejected.match(result)) {
+        // Error will be automatically displayed from Redux state
+      }
+    } catch (err) {
+      console.error('Signup error:', err);
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-gray-50 p-4 md:p-8 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md overflow-hidden">
@@ -95,7 +120,7 @@ const VendorSignup = () => {
         <div className="p-6 md:p-8">
           {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-              {error}
+              {typeof error === 'string' ? error : 'An error occurred during signup'}
             </div>
           )}
           
@@ -106,15 +131,7 @@ const VendorSignup = () => {
               confirmPassword: ''
             }}
             validationSchema={validationSchema}
-            onSubmit={(values, { setSubmitting }) => {
-              dispatch(signupUser({
-                email: values.email,
-                password: values.password,
-                re_password: values.confirmPassword
-              }));
-              navigate(`/verify-otp/${values.email}`);
-              setSubmitting(false);
-            }}
+            onSubmit={handleSubmit}
           >
             {({ isSubmitting, values }) => (
               <Form className="space-y-4 md:space-y-6">
@@ -168,10 +185,10 @@ const VendorSignup = () => {
                 <div className="pt-4">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || isSubmitting}
                     className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-lg hover:from-red-700 hover:to-red-800 transition-all font-medium shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
                   >
-                    {loading ? (
+                    {loading || isSubmitting ? (
                       <>
                         <CircularProgress size={20} color="inherit" className="mr-2" />
                         Processing...
