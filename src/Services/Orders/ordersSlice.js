@@ -5,8 +5,13 @@ import api from '../../Api/apiConfig';
 export const fetchVendorOrders = createAsyncThunk(
   'orders/fetchVendorOrders',
   async (_, { rejectWithValue }) => {
+    const token = localStorage.getItem('authToken');
     try {
-      const response = await api.get('/store/orders/');
+      const response = await api.get('/store/orders/', {
+        headers: {
+          Authorization: `JWT ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(

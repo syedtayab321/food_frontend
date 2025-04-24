@@ -1,59 +1,56 @@
-import React, { useState } from 'react';
-import { FaStar, FaFilter, FaSearch, FaReply, FaTrash, FaEllipsisV } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
 import { FiRefreshCw } from 'react-icons/fi';
+import { useDispatch, useSelector } from 'react-redux';
+import { 
+  fetchVendorReviews, 
+  respondToReview,
+  updateReviewResponse,
+  deleteReviewResponse,
+  clearReviewError
+} from './../../Services/Reviews/vendorReviewsSlice';
+import ReviewCard from './../../components/ReviewsComponents/ReviewCard';
+import ReviewsFilter from './../../components/ReviewsComponents/ReviewFilters';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ReviewsPage = () => {
-  // Sample reviews data
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      customer: 'Alex Johnson',
-      rating: 5,
-      comment: 'The food was absolutely delicious! Best steak I\'ve ever had.',
-      date: '2 hours ago',
-      response: null,
-      photo: 'https://randomuser.me/api/portraits/men/32.jpg'
-    },
-    {
-      id: 2,
-      customer: 'Sarah Miller',
-      rating: 4,
-      comment: 'Great service and atmosphere. The pasta could use more seasoning though.',
-      date: '1 day ago',
-      response: 'Thank you! We\'ll share your feedback with our chef.',
-      photo: 'https://randomuser.me/api/portraits/women/44.jpg'
-    },
-    {
-      id: 3,
-      customer: 'Michael Chen',
-      rating: 2,
-      comment: 'Waited 45 minutes for our food. Not coming back.',
-      date: '3 days ago',
-      response: null,
-      photo: 'https://randomuser.me/api/portraits/men/67.jpg'
-    },
-    {
-      id: 4,
-      customer: 'Emily Wilson',
-      rating: 5,
-      comment: 'Perfect anniversary dinner! The staff went above and beyond.',
-      date: '1 week ago',
-      response: 'We\'re honored to be part of your special occasion!',
-      photo: 'https://randomuser.me/api/portraits/women/63.jpg'
-    },
-  ]);
-
+  const dispatch = useDispatch();
+  const { reviews, loading, error, responseLoading, responseError } = useSelector((state) => state.reviews);
+  
+  // Local state for filtering
   const [searchQuery, setSearchQuery] = useState('');
   const [ratingFilter, setRatingFilter] = useState('all');
   const [responseFilter, setResponseFilter] = useState('all');
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeReplyId, setActiveReplyId] = useState(null);
-  const [replyText, setReplyText] = useState('');
+
+  // Fetch reviews on component mount
+  useEffect(() => {
+    dispatch(fetchVendorReviews())
+      .unwrap()
+      .catch(err => {
+        toast.error(err.message || 'Failed to load reviews');
+      });
+  }, [dispatch]);
+
+  // Clear errors when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearReviewError());
+    };
+  }, [dispatch]);
+
+  // Show error toast when responseError changes
+  useEffect(() => {
+    if (responseError) {
+      toast.error(responseError);
+      dispatch(clearReviewError());
+    }
+  }, [responseError, dispatch]);
 
   // Filter reviews
   const filteredReviews = reviews.filter(review => {
-    const matchesSearch = review.customer.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         review.comment.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = review.customer?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         review.comment?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRating = ratingFilter === 'all' || review.rating === parseInt(ratingFilter);
     const matchesResponse = responseFilter === 'all' || 
                           (responseFilter === 'responded' && review.response) || 
@@ -62,34 +59,72 @@ const ReviewsPage = () => {
   });
 
   // Handle reply submission
-  const handleReplySubmit = (reviewId) => {
-    setReviews(reviews.map(review => 
-      review.id === reviewId ? { ...review, response: replyText } : review
-    ));
-    setActiveReplyId(null);
-    setReplyText('');
+  const handleReplySubmit = async (reviewId, responseText) => {
+    if (!responseText.trim()) {
+      toast.warning('Please enter a response');
+      return;
+    }
+
+    try {
+      const review = reviews.find(r => r.id === reviewId);
+      const action = review.response 
+        ? updateReviewResponse({ reviewId, responseText })
+        : respondToReview({ reviewId, responseText });
+      
+      await dispatch(action).unwrap();
+      setActiveReplyId(null);
+      toast.success('Response submitted successfully');
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit response');
+    }
   };
 
   // Delete review
-  const handleDeleteReview = (reviewId) => {
-    setReviews(reviews.filter(review => review.id !== reviewId));
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await dispatch(deleteReviewResponse(reviewId)).unwrap();
+      toast.success('Response deleted successfully');
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete response');
+    }
   };
 
   // Refresh reviews
   const refreshReviews = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
+    dispatch(fetchVendorReviews())
+      .unwrap()
+      .then(() => toast.success('Reviews refreshed'))
+      .catch(err => {
+        toast.error(err.message || 'Failed to refresh reviews');
+      });
   };
 
-  // Render star ratings
-  const renderStars = (rating) => {
-    return [...Array(5)].map((_, i) => (
-      <FaStar 
-        key={i} 
-        className={i < rating ? 'text-yellow-400' : 'text-gray-300'} 
-      />
-    ));
-  };
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="space-y-4">
+      {[...Array(3)].map((_, index) => (
+        <div key={index} className="bg-white rounded-xl shadow-sm p-6 animate-pulse">
+          <div className="flex justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gray-200"></div>
+              <div className="space-y-2">
+                <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                <div className="h-3 w-24 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="w-8 h-8 bg-gray-200 rounded"></div>
+              <div className="w-8 h-8 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+          <div className="mt-4 pl-16 space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -102,135 +137,72 @@ const ReviewsPage = () => {
         
         <button 
           onClick={refreshReviews}
-          className={`p-2 bg-white rounded-lg border hover:bg-gray-50 ${isRefreshing ? 'animate-spin' : ''}`}
+          className={`p-2 bg-white rounded-lg border hover:bg-gray-50 transition-colors ${
+            loading ? 'animate-spin' : ''
+          }`}
+          disabled={loading}
+          aria-label="Refresh reviews"
         >
           <FiRefreshCw />
         </button>
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <FaSearch className="absolute left-3 top-3 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search reviews..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <FaFilter className="text-gray-500" />
-            <select
-              value={ratingFilter}
-              onChange={(e) => setRatingFilter(e.target.value)}
-              className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500"
-            >
-              <option value="all">All Ratings</option>
-              <option value="5">5 Stars</option>
-              <option value="4">4 Stars</option>
-              <option value="3">3 Stars</option>
-              <option value="2">2 Stars</option>
-              <option value="1">1 Star</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <select
-              value={responseFilter}
-              onChange={(e) => setResponseFilter(e.target.value)}
-              className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500"
-            >
-              <option value="all">All Reviews</option>
-              <option value="responded">Responded</option>
-              <option value="unresponded">Unresponded</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <ReviewsFilter 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        ratingFilter={ratingFilter}
+        setRatingFilter={setRatingFilter}
+        responseFilter={responseFilter}
+        setResponseFilter={setResponseFilter}
+        disabled={loading}
+      />
 
       {/* Reviews List */}
-      <div className="space-y-4">
-        {filteredReviews.length === 0 ? (
+      <div className="space-y-4 transition-opacity duration-300">
+        {loading && !reviews.length ? (
+          <LoadingSkeleton />
+        ) : error ? (
+          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+            <div className="text-red-500 mb-2">Failed to load reviews</div>
+            <button
+              onClick={refreshReviews}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : filteredReviews.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm p-8 text-center text-gray-500">
-            No reviews found matching your criteria
+            {searchQuery || ratingFilter !== 'all' || responseFilter !== 'all' ? (
+              <>
+                <p>No reviews match your current filters</p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setRatingFilter('all');
+                    setResponseFilter('all');
+                  }}
+                  className="mt-2 px-4 py-2 text-red-600 hover:underline"
+                >
+                  Clear all filters
+                </button>
+              </>
+            ) : (
+              'No reviews available yet'
+            )}
           </div>
         ) : (
           filteredReviews.map((review) => (
-            <div key={review.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-4">
-                    <img 
-                      src={review.photo} 
-                      alt={review.customer} 
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <div>
-                      <h3 className="font-bold text-gray-800">{review.customer}</h3>
-                      <div className="flex items-center gap-1">
-                        {renderStars(review.rating)}
-                        <span className="text-gray-500 text-sm ml-2">{review.date}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => setActiveReplyId(activeReplyId === review.id ? null : review.id)}
-                      className="p-2 text-gray-500 hover:text-red-600"
-                    >
-                      <FaReply />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteReview(review.id)}
-                      className="p-2 text-gray-500 hover:text-red-600"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-4 pl-16">
-                  <p className="text-gray-700">{review.comment}</p>
-
-                  {review.response && (
-                    <div className="mt-4 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
-                      <div className="font-medium text-red-600">Your Response</div>
-                      <p className="text-gray-700">{review.response}</p>
-                    </div>
-                  )}
-
-                  {activeReplyId === review.id && (
-                    <div className="mt-4">
-                      <textarea
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                        placeholder="Type your response here..."
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
-                        rows="3"
-                      ></textarea>
-                      <div className="flex justify-end gap-2 mt-2">
-                        <button 
-                          onClick={() => setActiveReplyId(null)}
-                          className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100"
-                        >
-                          Cancel
-                        </button>
-                        <button 
-                          onClick={() => handleReplySubmit(review.id)}
-                          className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                        >
-                          Submit Response
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <ReviewCard
+              key={review.id}
+              review={review}
+              onReplySubmit={handleReplySubmit}
+              onDelete={handleDeleteReview}
+              activeReplyId={activeReplyId}
+              setActiveReplyId={setActiveReplyId}
+              isSubmitting={responseLoading}
+            />
           ))
         )}
       </div>

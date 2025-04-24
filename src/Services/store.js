@@ -4,6 +4,8 @@ import otpVerificationReducer from './Auth/otpSlice';
 import categoryReducer from './MenuItems/categorySlice';
 import menuItemReducer from './MenuItems/menuItemSlice';
 import ordersReducer from './Orders/ordersSlice';
+import reviewsReducer from './Reviews/vendorReviewsSlice';
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -11,6 +13,7 @@ export const store = configureStore({
     categories: categoryReducer,
     menuItems : menuItemReducer,
     orders: ordersReducer,
+    reviews: reviewsReducer,
     // other reducers...
   },
 });
