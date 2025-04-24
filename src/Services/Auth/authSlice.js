@@ -6,9 +6,10 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/jwt/create/', { email, password });
+      console.log(response)
       // Store token in localStorage
-      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('authToken', response.data.access);
       return response.data;
     } catch (error) {
       // Return custom error message from API if any
@@ -27,6 +28,7 @@ export const signupUser = createAsyncThunk(
   async ({ email, password, re_password }, { rejectWithValue }) => {
     try {
       const response = await api.post('/auth/register/', { email, password, re_password });
+      localStorage.setItem('authToken', response.data.token);
       return response.data;
     } catch (error) {
       if (error.response && error.response.data.message) {
@@ -38,12 +40,15 @@ export const signupUser = createAsyncThunk(
   }
 );
 
+const token = localStorage.getItem('authToken');
+
 const initialState = {
   user: null,
   loading: false,
   error: null,
-  isAuthenticated: false,
+  isAuthenticated: !!token, // true if token exists
 };
+
 
 const authSlice = createSlice({
   name: 'auth',

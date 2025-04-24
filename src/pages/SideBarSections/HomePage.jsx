@@ -62,7 +62,7 @@ const HomePage = () => {
           <p className="opacity-90">Real-time performance metrics and analytics</p>
         </div>
 
-        <StatsCards statsData={dashboardData.stats} />
+        {/* <StatsCards statsData={dashboardData.stats} /> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <SalesChart data={dashboardData.salesData} />

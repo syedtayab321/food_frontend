@@ -2,7 +2,9 @@ import React from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { FaEnvelope, FaLock, FaArrowRight } from 'react-icons/fa';
-import { useNavigate,Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../../Services/Auth/authSlice';
 
 const VendorLogin = () => {
   const initialValues = {
@@ -12,6 +14,8 @@ const VendorLogin = () => {
   };
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
 
   const validationSchema = Yup.object().shape({
     email: Yup.string()
@@ -23,12 +27,26 @@ const VendorLogin = () => {
     rememberMe: Yup.boolean()
   });
 
-  const onSubmit = (values, { setSubmitting }) => {
-    setTimeout(() => {
-      navigate('/dashboard');
+  const onSubmit = async (values, { setSubmitting, resetForm }) => {
+    try {
+      const resultAction = await dispatch(loginUser({
+        email: values.email,
+        password: values.password
+      }));
+  
+      if (loginUser.fulfilled.match(resultAction)) {
+        resetForm();
+        navigate('/dashboard');
+      } else {
+        console.error('Login failed:', resultAction.payload || resultAction.error.message);
+      }
+    } catch (err) {
+      console.error('Unexpected error during login:', err);
+    } finally {
       setSubmitting(false);
-    }, 1000);
+    }
   };
+  
 
   const CustomInput = ({ field, form, icon, ...props }) => (
     <div className="relative">
@@ -56,6 +74,13 @@ const VendorLogin = () => {
           </div>
 
           <div className="p-6 md:p-8">
+            {/* Display error message if login fails */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700">
+                <p>{error}</p>
+              </div>
+            )}
+            
             <Formik
               initialValues={initialValues}
               validationSchema={validationSchema}
@@ -117,10 +142,10 @@ const VendorLogin = () => {
                   <div className="pt-2">
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || loading}
                       className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-lg hover:from-red-700 hover:to-red-800 transition-all font-medium shadow-md hover:shadow-lg disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center"
                     >
-                      {isSubmitting ? (
+                      {(isSubmitting || loading) ? (
                         'Signing in...'
                       ) : (
                         <>
@@ -134,12 +159,12 @@ const VendorLogin = () => {
                   <div className="text-center pt-4">
                     <p className="text-sm text-gray-600">
                       Don't have an account?{' '}
-                      <a
-                        href="/signup"
+                      <Link
+                        to="/signup"
                         className="font-medium text-red-600 hover:text-red-700 underline"
                       >
                         Create account
-                      </a>
+                      </Link>
                     </p>
                   </div>
                 </Form>
