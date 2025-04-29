@@ -11,7 +11,7 @@ const initialState = {
 export const fetchMenuItems = createAsyncThunk(
   'menuItems/fetchMenuItems',
   async () => {
-    const response = await api.get('/store/products/');
+    const response = await api.get('/store/products/seller-products/');
     return response.data;
   }
 );
@@ -19,7 +19,7 @@ export const fetchMenuItems = createAsyncThunk(
 export const addMenuItem = createAsyncThunk(
   'menuItems/addMenuItem',
   async (newItem) => {
-    const response = await api.post('/store/products/', newItem);
+    const response = await api.post('/store/products/seller-products/', newItem);
     return response.data;
   }
 );
@@ -27,7 +27,7 @@ export const addMenuItem = createAsyncThunk(
 export const updateMenuItem = createAsyncThunk(
   'menuItems/updateMenuItem',
   async ({ id, ...updatedItem }) => {
-    const response = await api.put(`/store/products/${id}`, updatedItem);
+    const response = await api.put(`/store/update_status/ ${id}`, updatedItem);
     return response.data;
   }
 );

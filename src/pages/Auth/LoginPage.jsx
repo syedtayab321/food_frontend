@@ -36,7 +36,7 @@ const VendorLogin = () => {
   
       if (loginUser.fulfilled.match(resultAction)) {
         resetForm();
-        navigate('/dashboard');
+        navigate('/admin-access');
       } else {
         console.error('Login failed:', resultAction.payload || resultAction.error.message);
       }

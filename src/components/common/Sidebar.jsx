@@ -45,6 +45,7 @@ const Sidebar = ({ onSelect, isOpen, setIsOpen }) => {
 
   const handleLogout = async() => {
     dispatch(logout());
+    localStorage.clear();
     navigate("/");
     setIsLogoutOpen(false);
   };

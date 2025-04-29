@@ -100,7 +100,7 @@ const VerifyOTP = () => {
   useEffect(() => {
     if (isVerified) {
       const timer = setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/');
       }, 1500);
       return () => clearTimeout(timer);
     }
