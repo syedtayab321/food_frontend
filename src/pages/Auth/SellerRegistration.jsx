@@ -46,10 +46,13 @@ const SellerRegistrationForm = () => {
         return open && close;
       }),
     profile_picture: Yup.mixed()
-      .required('Business logo is required')
-      .test('fileSize', 'File too large (max 5MB)', value => value && value.size <= 5000000)
-      .test('fileType', 'Unsupported file type (only JPEG/PNG)', value => 
-        value && ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type))
+      // .required('Business logo is required')
+      .notRequired()
+      .test('fileSize', 'File too large (max 5MB)', value =>{  if (!value) return true; // CHANGED: Allow empty value
+        return value.size <= 5000000;})
+      .test('fileType', 'Unsupported file type (only JPEG/PNG)', value => {
+        if (!value) return true; // CHANGED: Allow empty value
+        return ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type);})
   });
 
   const formik = useFormik({
@@ -69,12 +72,15 @@ const SellerRegistrationForm = () => {
         
         // Append all form values including the file
         Object.entries(values).forEach(([key, value]) => {
-          if (key === 'profile_picture' && value) {
-            formData.append(key, value, value.name);
-          } else {
+          if (key !== 'profile_picture' && value) {
             formData.append(key, value);
-          }
+          } 
         });
+
+          // Only append profile_picture if it exists
+          if (values.profile_picture) {
+            formData.append('profile_picture', values.profile_picture, values.profile_picture.name);
+          }
 
         // Debug FormData before submission
         // for (let [key, value] of formData.entries()) {
@@ -164,7 +170,7 @@ const SellerRegistrationForm = () => {
               ) : (
                 <div className="text-gray-400 flex flex-col items-center">
                   <FaCamera className="text-3xl mb-2" />
-                  <span className="text-xs">Upload Logo</span>
+                  <span className="text-xs">Upload Logo </span>
                 </div>
               )}
             </div>

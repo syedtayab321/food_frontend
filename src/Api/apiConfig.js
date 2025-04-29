@@ -2,12 +2,13 @@ import axios from 'axios';
 
 const BASE_URL = 'https://xavics.pythonanywhere.com/';
 
-const api = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// const api = axios.create({
+//   baseURL: BASE_URL,
+//   headers: {
+//     'Content-Type': 'application/json',
+//   },
+// });
+const api = axios.create({ baseURL: BASE_URL });
 
 // Request interceptor for auth token
 api.interceptors.request.use(
