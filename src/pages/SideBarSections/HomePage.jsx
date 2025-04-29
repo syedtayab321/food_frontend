@@ -69,10 +69,10 @@ const HomePage = () => {
           <PopularItemsChart data={dashboardData.popularItems} />
         </div>
 
-        <RecentOrders 
+        {/* <RecentOrders 
           orders={dashboardData.recentOrders} 
           onViewAll={handleViewAllOrders} 
-        />
+        /> */}
 
         <MenuCategories 
           categories={dashboardData.menuCategories} 

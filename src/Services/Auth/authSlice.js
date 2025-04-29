@@ -7,8 +7,6 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const response = await api.post('/auth/jwt/create/', { email, password });
-      console.log(response)
-      // Store token in localStorage
       localStorage.setItem('authToken', response.data.access);
       return response.data;
     } catch (error) {
@@ -28,7 +26,6 @@ export const signupUser = createAsyncThunk(
   async ({ email, password, re_password }, { rejectWithValue }) => {
     try {
       const response = await api.post('/auth/register/', { email, password, re_password });
-      localStorage.setItem('authToken', response.data.token);
       return response.data;
     } catch (error) {
       if (error.response && error.response.data.message) {
@@ -55,7 +52,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      localStorage.removeItem('authToken');
+      localStorage.clear();
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;

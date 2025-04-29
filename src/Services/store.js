@@ -5,6 +5,7 @@ import categoryReducer from './MenuItems/categorySlice';
 import menuItemReducer from './MenuItems/menuItemSlice';
 import ordersReducer from './Orders/ordersSlice';
 import reviewsReducer from './Reviews/vendorReviewsSlice';
+import sellerReducer from './Auth/sellerSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     menuItems : menuItemReducer,
     orders: ordersReducer,
     reviews: reviewsReducer,
+    sellerRegistration: sellerReducer,
     // other reducers...
   },
 });
