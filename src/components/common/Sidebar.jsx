@@ -70,7 +70,7 @@ const Sidebar = ({ onSelect, isOpen, setIsOpen }) => {
       {isOpen && (
         <div className="flex items-center justify-center p-6">
           <h1 className="text-2xl font-bold italic text-white">
-            Wadi Connect
+            Kwick
           </h1>
         </div>
       )}

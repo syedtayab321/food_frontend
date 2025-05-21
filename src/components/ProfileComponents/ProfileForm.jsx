@@ -10,7 +10,7 @@ const ProfileForm = ({
 }) => (
   <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
     <div className="px-6 py-4 border-b flex justify-between items-center">
-      <h2 className="text-xl font-bold text-gray-800">Personal Information</h2>
+      <h2 className="text-xl font-bold text-gray-800">Business Information</h2>
       
       {!isEditing ? (
         <button 
@@ -41,16 +41,9 @@ const ProfileForm = ({
       {isEditing ? (
         <div className="space-y-4">
           <FormInput 
-            label="Full Name"
-            name="name"
-            value={profile.name}
-            onChange={onInputChange}
-          />
-          <FormInput 
-            label="Email"
-            name="email"
-            type="email"
-            value={profile.email}
+            label="Business Name"
+            name="business_name"
+            value={profile.business_name}
             onChange={onInputChange}
           />
           <FormInput 
@@ -60,19 +53,53 @@ const ProfileForm = ({
             value={profile.phone}
             onChange={onInputChange}
           />
+          <FormInput 
+            label="Business Address"
+            name="business_address"
+            value={profile.business_address}
+            onChange={onInputChange}
+          />
+          <FormInput 
+            label="Operating Hours (e.g. 9:00 AM - 10:00 PM)"
+            name="opening_closing_time"
+            value={profile.opening_closing_time}
+            onChange={onInputChange}
+          />
           <FormTextArea 
-            label="Bio"
-            name="bio"
-            value={profile.bio}
+            label="Business Description"
+            name="business_description"
+            value={profile.business_description}
             onChange={onInputChange}
           />
         </div>
       ) : (
         <div className="space-y-4">
-          <ProfileDetail label="Full Name" value={profile.name} />
-          <ProfileDetail label="Email" value={profile.email} />
+          <ProfileDetail label="Business Name" value={profile.business_name} />
           <ProfileDetail label="Phone Number" value={profile.phone} />
-          <ProfileDetail label="Bio" value={profile.bio} />
+          <ProfileDetail label="Business Address" value={profile.business_address} />
+          <ProfileDetail label="Operating Hours" value={profile.opening_closing_time} />
+          <ProfileDetail label="Business Description" value={profile.business_description} />
+          <ProfileDetail 
+            label="Verification Status" 
+            value={
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                profile.verification_status === 'verified' 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {profile.verification_status}
+              </span>
+            } 
+          />
+          <ProfileDetail 
+            label="Average Rating" 
+            value={
+              <div className="flex items-center">
+                <span className="text-yellow-500 mr-1">★</span>
+                {profile.average_rating || 'Not rated yet'}
+              </div>
+            } 
+          />
         </div>
       )}
     </div>
@@ -108,7 +135,7 @@ const FormTextArea = ({ label, name, value, onChange }) => (
 const ProfileDetail = ({ label, value }) => (
   <div>
     <h3 className="text-gray-500 text-sm">{label}</h3>
-    <p className="text-lg mt-1">{value || 'Not specified'}</p>
+    <div className="text-lg mt-1">{value || 'Not specified'}</div>
   </div>
 );
 

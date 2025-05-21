@@ -6,13 +6,16 @@ export const fetchVendorOrders = createAsyncThunk(
   'orders/fetchVendorOrders',
   async (_, { rejectWithValue }) => {
     const token = localStorage.getItem('authToken');
+    // console.log('Token:', token);
     try {
       const response = await api.get('/store/orders/', {
         headers: {
           Authorization: `JWT ${token}`,
         },
       });
+      console.log('Response:', response);
       return response.data;
+      
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.detail || error.message

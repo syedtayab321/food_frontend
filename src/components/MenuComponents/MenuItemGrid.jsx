@@ -17,11 +17,15 @@ const MenuItemsGrid = ({ items, onEditItem, onDeleteItem }) => {
           key={item.id}
           className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition"
         >
-          {item.images && item.images.length > 0 ? (
+          {item.image ? (
             <img 
-              src={item.images[0].image} 
+              src={item.image} 
               alt={item.title} 
               className="w-full h-40 object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
+              }}
             />
           ) : (
             <div className="h-40 bg-gray-200 flex items-center justify-center text-gray-500">

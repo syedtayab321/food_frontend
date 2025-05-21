@@ -63,6 +63,7 @@ const MenuManagementPage = () => {
       }
       setIsItemModalOpen(false);
       setCurrentItem(null);
+      dispatch(fetchMenuItems()); // Refresh the list
     } catch (err) {
       console.error('Failed to save item:', err);
     }
@@ -71,6 +72,7 @@ const MenuManagementPage = () => {
   const handleDeleteItem = async (itemId) => {
     try {
       await dispatch(deleteMenuItem(itemId)).unwrap();
+      dispatch(fetchMenuItems()); // Refresh the list
     } catch (err) {
       console.error('Failed to delete item:', err);
     }
@@ -208,10 +210,10 @@ const MenuManagementPage = () => {
         onSave={handleAddOrUpdateItem}
         categories={availableCategories}
         initialData={currentItem ? {
-          title: currentItem.title,
+          name: currentItem.title,
           description: currentItem.description,
-          unit_price: currentItem.unit_price,
-          inventory: currentItem.inventory,
+          price: currentItem.unit_price,
+          stock: currentItem.inventory,
           category: currentItem.category,
           images: currentItem.images
         } : null}

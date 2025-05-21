@@ -53,7 +53,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header title="WadiConnect Dashboard" userName="Manager" />
+      <Header title="Kwick Dashboard" userName="Manager" />
       
       <main className="container mx-auto px-4 py-8">
         {/* Welcome Banner */}

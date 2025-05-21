@@ -1,6 +1,6 @@
-import { FaUser, FaEnvelope, FaPhone, FaLock, FaCamera } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaCamera, FaStar, FaMapMarkerAlt, FaClock, FaShieldAlt } from 'react-icons/fa';
 
-const ProfileCard = ({ profile, profileImage, onImageChange, onPasswordToggle }) => (
+const ProfileCard = ({ profile, profileImage, onImageChange, onPasswordToggle, }) => (
   <div className="lg:col-span-1">
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
       <div className="relative bg-gradient-to-r from-red-600 to-red-700 h-24"></div>
@@ -26,26 +26,31 @@ const ProfileCard = ({ profile, profileImage, onImageChange, onPasswordToggle })
         </div>
 
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">{profile.name}</h2>
-          <p className="text-red-600 font-medium">{profile.role}</p>
-          <p className="text-gray-500 text-sm mt-2">Member since {profile.joinDate}</p>
+          <h2 className="text-xl font-bold text-gray-800">{profile.business_name}</h2>
+          <p className="text-red-600 font-medium">{profile.verification_status === 'verified' ? 'Verified Business' : 'Unverified Business'}</p>
+          <p className="text-gray-500 text-sm mt-2">Member since {new Date(profile.created_at).toLocaleDateString()}</p>
         </div>
 
         <div className="space-y-4">
           <ProfileInfoItem 
-            icon={<FaUser className="text-red-600" />}
-            label="Full Name"
-            value={profile.name}
+            icon={<FaStar className="text-red-600" />}
+            label="Average Rating"
+            value={profile.average_rating || 'Not rated yet'}
           />
           <ProfileInfoItem 
-            icon={<FaEnvelope className="text-red-600" />}
-            label="Email"
-            value={profile.email}
+            icon={<FaMapMarkerAlt className="text-red-600" />}
+            label="Business Address"
+            value={profile.business_address}
           />
           <ProfileInfoItem 
-            icon={<FaPhone className="text-red-600" />}
-            label="Phone"
-            value={profile.phone}
+            icon={<FaClock className="text-red-600" />}
+            label="Operating Hours"
+            value={profile.opening_closing_time}
+          />
+          <ProfileInfoItem 
+            icon={<FaShieldAlt className="text-red-600" />}
+            label="Verification Status"
+            value={profile.verification_status}
           />
         </div>
 
@@ -61,13 +66,13 @@ const ProfileCard = ({ profile, profileImage, onImageChange, onPasswordToggle })
 );
 
 const ProfileInfoItem = ({ icon, label, value }) => (
-  <div className="flex items-center p-3 rounded-lg hover:bg-red-50 transition">
+  <div className="flex items-start p-3 rounded-lg hover:bg-red-50 transition">
     <div className="bg-red-100 p-2 rounded-full mr-3">
       {icon}
     </div>
     <div>
       <p className="text-gray-500 text-sm">{label}</p>
-      <p className="font-medium">{value}</p>
+      <p className="font-medium break-words">{value || 'Not specified'}</p>
     </div>
   </div>
 );

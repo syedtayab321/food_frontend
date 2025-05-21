@@ -10,6 +10,7 @@ import NotAuthorized from './pages/Common/ErrorAuthenticationPage';
 import SellerRegistrationPage from './pages/Auth/SellerRegistration';
 import AdminAccessPage from './pages/Common/AdminAcessPage';
 import RegistrationPendingPage from './pages/Common/RegistrationPendingPage';
+import OrderManagementPage from './pages/SideBarSections/OrdersManagement';
 function App() {
   return (
     <>
@@ -22,7 +23,7 @@ function App() {
         <Route path ='/admin-access'  element={<AdminAccessPage/>}/>
         <Route path ='/seller-registration'  element={<SellerRegistrationPage/>}/>
         <Route path ='/registration-pending'  element={<RegistrationPendingPage/>}/>
-        
+        <Route path='/orders' element={<OrderManagementPage />} />
         {/* Protected Dashboard Route */}
         <Route
           path='/dashboard'
