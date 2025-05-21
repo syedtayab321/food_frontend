@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { FaTimes, FaUpload, FaPlus, FaSpinner, FaSave, FaInfoCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { selectAllCategories } from "./../../Services/MenuItems/categorySlice";
+import { addMenuItem, updateMenuItem } from "../../Services/MenuItems/menuItemSlice";
 
 const AddItemModal = ({ 
   isOpen, 
@@ -123,42 +124,49 @@ const AddItemModal = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit form
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  const dispatch = useDispatch();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (!validateForm()) return;
 
-    setIsLoading(true);
+  setIsLoading(true);
+
+  try {
+    const formDataToSend = new FormData();
     
-    // Prepare the data to be saved (matches your API structure)
-    const itemData = {
-      title: formData.title,
-      description: formData.description,
-      unit_price: formData.unit_price, // Keep as string for API
-      inventory: formData.inventory,
-      category: formData.category,
-      // For new images, we'll need to handle file upload separately
-      // Existing images will have their URLs
-      images: formData.images.map(img => ({
-        id: img.id || undefined, // Only include id if it exists (editing)
-        image: img.file ? img.file : img.image // Keep existing images as is
-      }))
-    };
+    // Append all fields
+    formDataToSend.append('title', formData.title);
+    formDataToSend.append('description', formData.description);
+    formDataToSend.append('unit_price', formData.unit_price);
+    formDataToSend.append('inventory', formData.inventory);
+    formDataToSend.append('category', formData.category);
+   // formDataToSend.append('vendor', 1); // Default vendor ID
 
-    // Call the save handler (add or update)
-    onSave(itemData)
-      .then(() => {
-        toast.success(`Item ${isEditing ? 'updated' : 'added'} successfully!`);
-        onClose();
-      })
-      .catch((error) => {
-        toast.error(`Failed to ${isEditing ? 'update' : 'add'} item: ${error.message}`);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
+    // Handle image upload
+    if (formData.images.length > 0 && formData.images[0].file) {
+      formDataToSend.append('image', formData.images[0].file);
+    }
 
+    if (isEditing && initialData) {
+      await dispatch(updateMenuItem({
+        id: initialData.id,
+        formData: formDataToSend  // Changed from 'data' to 'formData'
+      })).unwrap();
+      toast.success('Item updated successfully!');
+    } else {
+      await dispatch(addMenuItem(formDataToSend)).unwrap();
+      toast.success('Item added successfully!');
+    }
+
+    onClose();
+  } catch (error) {
+    console.error('Submission error:', error);
+    toast.error(`Operation failed: ${error.message}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
   if (!isOpen) return null;
 
   return (
@@ -214,7 +222,7 @@ const AddItemModal = ({
                   >
                     {availableCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
-                        {cat.name}
+                        {cat.title}
                       </option>
                     ))}
                   </select>

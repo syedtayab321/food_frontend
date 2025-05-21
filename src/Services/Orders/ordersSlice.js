@@ -8,7 +8,7 @@ export const fetchVendorOrders = createAsyncThunk(
     const token = localStorage.getItem('authToken');
     // console.log('Token:', token);
     try {
-      const response = await api.get('/store/orders/', {
+      const response = await api.get('/store/orders/?as=seller', {
         headers: {
           Authorization: `JWT ${token}`,
         },

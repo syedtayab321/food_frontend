@@ -42,37 +42,26 @@ const MenuManagementPage = () => {
     setIsItemModalOpen(true);
   };
 
-  const handleAddOrUpdateItem = async (itemData) => {
-    try {
-      const formattedData = {
-        title: itemData.name,
-        description: itemData.description,
-        unit_price: itemData.price,
-        inventory: itemData.stock,
-        category: itemData.category,
-        images: itemData.images || []
-      };
-
-      if (currentItem) {
-        await dispatch(updateMenuItem({
-          id: currentItem.id,
-          ...formattedData
-        })).unwrap();
-      } else {
-        await dispatch(addMenuItem(formattedData)).unwrap();
-      }
-      setIsItemModalOpen(false);
-      setCurrentItem(null);
-      dispatch(fetchMenuItems()); // Refresh the list
-    } catch (err) {
-      console.error('Failed to save item:', err);
+ const handleAddOrUpdateItem = async (formData) => {
+  try {
+    if (currentItem) {
+      await dispatch(updateMenuItem({
+        id: currentItem.id,
+        formData: formData
+      })).unwrap();
+    } else {
+      await dispatch(addMenuItem(formData)).unwrap();
     }
-  };
+    setIsItemModalOpen(false);
+    setCurrentItem(null);
+  } catch (err) {
+    console.error('Failed to save item:', err);
+  }
+};
 
   const handleDeleteItem = async (itemId) => {
     try {
       await dispatch(deleteMenuItem(itemId)).unwrap();
-      dispatch(fetchMenuItems()); // Refresh the list
     } catch (err) {
       console.error('Failed to delete item:', err);
     }
@@ -210,10 +199,10 @@ const MenuManagementPage = () => {
         onSave={handleAddOrUpdateItem}
         categories={availableCategories}
         initialData={currentItem ? {
-          name: currentItem.title,
+          title: currentItem.title,
           description: currentItem.description,
-          price: currentItem.unit_price,
-          stock: currentItem.inventory,
+          unit_price: currentItem.unit_price,
+          inventory: currentItem.inventory,
           category: currentItem.category,
           images: currentItem.images
         } : null}
