@@ -32,7 +32,7 @@ const OrdersTable = ({ orders, onStatusUpdate }) => {
           >
             {/* Order ID */}
             <div className="col-span-4 md:col-span-2 font-medium text-blue-600 flex items-center">
-              <span className="truncate">#{order.id}</span>
+              <span className="truncate">{order.id}</span>
             </div>
 
             {/* Customer */}
