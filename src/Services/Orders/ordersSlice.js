@@ -6,39 +6,41 @@ export const fetchVendorOrders = createAsyncThunk(
   'orders/fetchVendorOrders',
   async (_, { rejectWithValue }) => {
     const token = localStorage.getItem('authToken');
-    // console.log('Token:', token);
     try {
-      const response = await api.get('/store/orders/', {
+      const response = await api.get('/store/orders/?as=seller', {
         headers: {
-          Authorization: `JWT ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      console.log('Response:', response);
       return response.data;
-      
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.detail || error.message
-      );
+      return rejectWithValue(error.response?.data?.detail || error.message);
     }
   }
 );
 
-// Update order status
+// Unified status update thunk
 export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
-  async ({ orderId, status }, { rejectWithValue }) => {
+  async ({ orderId, statusData }, { rejectWithValue }) => {
+    const token = localStorage.getItem('authToken');
     try {
-      const response = await api.patch(`/orders/${orderId}/update_status/`, { status });
+      const response = await api.patch(
+        `/store/orders/${orderId}/update_status/`,
+        statusData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       return response.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.detail || error.message
-      );
+      return rejectWithValue(error.response?.data?.detail || error.message);
     }
   }
 );
-
 const initialState = {
   orders: [],
   loading: false,
@@ -69,7 +71,7 @@ const ordersSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Update order status
+      // Unified status update
       .addCase(updateOrderStatus.pending, (state) => {
         state.loading = true;
         state.error = null;

@@ -25,23 +25,14 @@ export const fetchMenuItems = createAsyncThunk(
   }
 );
 
+// In your menuItemSlice.js
+
 export const addMenuItem = createAsyncThunk(
   'menuItems/addMenuItem',
-  async (newItem) => {
+  async (formData) => { 
+     console.log('FormData:', formData); // Log the FormData object
     try {
-      const formData = new FormData();
-      formData.append('title', newItem.title);
-      formData.append('description', newItem.description);
-      formData.append('unit_price', newItem.unit_price);
-      formData.append('inventory', newItem.inventory);
-      formData.append('category', newItem.category);
-      formData.append('vendor', 1); // Default vendor ID
-
-      if (newItem.images && newItem.images.length > 0) {
-        formData.append('image', newItem.images[0]);
-      }
-
-      const response = await api.post('store/products/seller-products/', formData, {
+      const response = await api.post('store/products/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -55,18 +46,13 @@ export const addMenuItem = createAsyncThunk(
 
 export const updateMenuItem = createAsyncThunk(
   'menuItems/updateMenuItem',
-  async ({ id, ...updatedItem }) => {
+  async ({ id, formData }) => {  // Accept FormData directly
     try {
-      const payload = {
-        title: updatedItem.title,
-        description: updatedItem.description,
-        unit_price: updatedItem.unit_price,
-        inventory: updatedItem.inventory,
-        category: updatedItem.category,
-        vendor: 1 // Default vendor ID
-      };
-
-      const response = await api.put(`store/products/${id}/`, payload);
+      const response = await api.put(`store/products/${id}/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       return response.data;
     } catch (error) {
       return handleApiError(error);
