@@ -1,16 +1,28 @@
 import StatusBadge from "./OrderStatusBadge";
 import OrderActions from "./OrderAction";
-import { FiPackage, FiClock, FiDollarSign, FiUser } from "react-icons/fi";
+import PaymentStatus from "./paymentStaus";
+import { FiPackage, FiClock } from "react-icons/fi";
 
 const OrdersTable = ({ orders, onStatusUpdate }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200">
-      {/* Table Header remains the same */}
+      {/* Table Header */}
+      <div className="grid grid-cols-12 gap-4 p-5 border-b border-gray-200 bg-gray-50 text-gray-600 text-sm font-medium">
+        <div className="col-span-4 md:col-span-2">Order ID</div>
+        <div className="col-span-5 md:col-span-3">Customer</div>
+        <div className="hidden md:block md:col-span-1">Items</div>
+        <div className="hidden md:block md:col-span-2">Time</div>
+        <div className="col-span-2 md:col-span-1">Total</div>
+        <div className="col-span-1 md:col-span-3 text-right">Status</div>
+      </div>
 
-      {/* Orders List */}
       {orders.length === 0 ? (
         <div className="p-8 text-center">
-          {/* No orders found UI remains the same */}
+          <div className="text-gray-500 mb-4">
+            <FiPackage className="inline-block text-3xl" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-700 mb-1">No orders found</h3>
+          <p className="text-gray-500">Orders you receive will appear here</p>
         </div>
       ) : (
         orders.map((order) => (
@@ -23,7 +35,7 @@ const OrdersTable = ({ orders, onStatusUpdate }) => {
               <span className="truncate">#{order.id}</span>
             </div>
 
-            {/* Customer - FIXED THIS SECTION */}
+            {/* Customer */}
             <div className="col-span-5 md:col-span-3 flex items-center">
               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
                 {order.customer_email?.charAt(0).toUpperCase() || 'C'}
@@ -32,7 +44,7 @@ const OrdersTable = ({ orders, onStatusUpdate }) => {
             </div>
 
             {/* Items (Desktop) */}
-            <div className="hidden md:block md:col-span-2 text-gray-600">
+            <div className="hidden md:block md:col-span-1 text-gray-600">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100">
                 {order.items?.length || 0} {order.items?.length === 1 ? 'item' : 'items'}
               </span>
@@ -44,38 +56,52 @@ const OrdersTable = ({ orders, onStatusUpdate }) => {
             </div>
 
             {/* Total */}
-            <div className="col-span-2 md:col-span-2 font-medium text-gray-800">
+            <div className="col-span-2 md:col-span-1 font-medium text-gray-800">
               ${parseFloat(order.total).toFixed(2)}
             </div>
 
-            {/* Status and Actions (Desktop) */}
-            <div className="col-span-1 md:col-span-1 flex items-center justify-end">
-              <div className="flex items-center space-x-3">
-                <StatusBadge status={order.delivery_status} />
+            {/* Status and Actions */}
+            <div className="col-span-1 md:col-span-3 flex items-center justify-end space-x-2">
+              <PaymentStatus 
+                status={order.payment_status} 
+                onUpdate={(statusData) => onStatusUpdate(order.id, statusData)}
+                orderId={order.id}
+              />
+              <OrderActions 
+                status={order.delivery_status} 
+                onUpdate={(statusData) => onStatusUpdate(order.id, statusData)}
+                orderId={order.id}
+              />
+            </div>
+
+            {/* Mobile View */}
+            <div className="col-span-12 md:hidden mt-3 pt-3 border-t border-gray-100">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-500 text-sm flex items-center">
+                    <FiPackage className="mr-1" /> {order.items?.length || 0}
+                  </span>
+                  <span className="text-gray-500 text-sm flex items-center">
+                    <FiClock className="mr-1" /> {new Date(order.placed_at).toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <div className="flex space-x-2">
+                  <StatusBadge status={order.delivery_status} type="delivery" />
+                  <PaymentStatus 
+                    status={order.payment_status} 
+                    onUpdate={(statusData) => onStatusUpdate(order.id, statusData)}
+                    orderId={order.id}
+                    mobile
+                  />
+                </div>
                 <OrderActions 
                   status={order.delivery_status} 
-                  onUpdate={onStatusUpdate}
+                  onUpdate={(statusData) => onStatusUpdate(order.id, statusData)}
                   orderId={order.id}
                 />
               </div>
-            </div>
-
-            {/* Mobile View Bottom Row */}
-            <div className="col-span-12 md:hidden mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
-              <div className="flex items-center space-x-4 text-sm">
-                <span className="text-gray-500 flex items-center">
-                  <FiPackage className="mr-1" /> {order.items?.length || 0}
-                </span>
-                <span className="text-gray-500 flex items-center">
-                  <FiClock className="mr-1" /> {new Date(order.placed_at).toLocaleTimeString()}
-                </span>
-                <StatusBadge status={order.delivery_status} />
-              </div>
-              <OrderActions 
-                status={order.delivery_status} 
-                onUpdate={onStatusUpdate}
-                orderId={order.id}
-              />
             </div>
           </div>
         ))

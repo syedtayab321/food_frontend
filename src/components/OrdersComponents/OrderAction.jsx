@@ -4,45 +4,44 @@ import { useState } from "react";
 const OrderActions = ({ status, onUpdate, orderId }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const handleAction = (newStatus) => {
-    onUpdate(orderId, newStatus);
+  const handleAction = (deliveryStatus) => {
+    onUpdate({ delivery_status: deliveryStatus });
     setShowDropdown(false);
   };
 
   return (
     <div className="relative">
-      {/* Main Action Button */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         className="flex items-center justify-center p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+        aria-label="Order actions"
       >
         <FaEllipsisV className="text-sm" />
       </button>
 
-      {/* Dropdown Actions */}
       {showDropdown && (
         <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg z-10 border border-gray-200">
-          {status === "Preparing" && (
+          {status === "PREPARING" && (
             <button
-              onClick={() => handleAction("Ready")}
+              onClick={() => handleAction("ON_ROUTE")}
               className="flex items-center w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50"
             >
               <FaCheck className="mr-2" />
               Mark as Ready
             </button>
           )}
-          {status === "Ready" && (
+          {status === "ON_ROUTE" && (
             <button
-              onClick={() => handleAction("Delivered")}
+              onClick={() => handleAction("DELIVERED")}
               className="flex items-center w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50"
             >
               <FaMotorcycle className="mr-2" />
               Mark as Delivered
             </button>
           )}
-          {(status === "Preparing" || status === "Ready") && (
+          {(status === "PREPARING" || status === "ON_ROUTE") && (
             <button
-              onClick={() => handleAction("Cancelled")}
+              onClick={() => handleAction("CANCELLED")}
               className="flex items-center w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
             >
               <FaTimes className="mr-2" />
