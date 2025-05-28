@@ -1,9 +1,11 @@
 import StatusBadge from "./OrderStatusBadge";
-import OrderActions from "./OrderAction";
-import PaymentStatus from "./paymentStaus";
+import OrderStatusActions from "./OrderStatusActions";
 import { FiPackage, FiClock } from "react-icons/fi";
+import OrderDetailsModal from "./OrderDetailsModal";
+import { useState } from "react";
 
 const OrdersTable = ({ orders, onStatusUpdate }) => {
+   const [selectedOrder, setSelectedOrder] = useState(null);
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200">
       {/* Table Header */}
@@ -30,18 +32,28 @@ const OrdersTable = ({ orders, onStatusUpdate }) => {
             key={order.id}
             className="grid grid-cols-12 gap-4 p-5 border-b border-gray-100 hover:bg-gray-50 transition-colors group"
           >
-            {/* Order ID */}
-            <div className="col-span-4 md:col-span-2 font-medium text-blue-600 flex items-center">
-              <span className="truncate">{order.id}</span>
-            </div>
-
-            {/* Customer */}
-            <div className="col-span-5 md:col-span-3 flex items-center">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
-                {order.customer_email?.charAt(0).toUpperCase() || 'C'}
+            
+           {/* Order ID - now clickable */}
+              <div 
+                className="col-span-4 md:col-span-2 font-medium text-blue-600 flex items-center cursor-pointer hover:underline"
+                onClick={() => setSelectedOrder(order)}
+              >
+                <span className="truncate">{order.id}</span>
               </div>
-              <span className="truncate">{order.customer_email || `Customer ${order.customer}`}</span>
-            </div>
+
+
+            {/* Customer - now clickable */}
+              <div 
+                className="col-span-5 md:col-span-3 flex items-center cursor-pointer hover:underline"
+                onClick={() => setSelectedOrder(order)}
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
+                  {order.customer_email?.charAt(0).toUpperCase() || 'C'}
+                </div>
+                <span className="truncate">
+                  {order.customer_email || `Customer ${order.customer}`}
+                </span>
+              </div>
 
             {/* Items (Desktop) */}
             <div className="hidden md:block md:col-span-1 text-gray-600">
@@ -62,15 +74,12 @@ const OrdersTable = ({ orders, onStatusUpdate }) => {
 
             {/* Status and Actions */}
             <div className="col-span-1 md:col-span-3 flex items-center justify-end space-x-2">
-              <PaymentStatus 
-                status={order.payment_status} 
-                onUpdate={(statusData) => onStatusUpdate(order.id, statusData)}
+              
+              <OrderStatusActions 
                 orderId={order.id}
-              />
-              <OrderActions 
-                status={order.delivery_status} 
-                onUpdate={(statusData) => onStatusUpdate(order.id, statusData)}
-                orderId={order.id}
+                paymentStatus={order.payment_status}
+                deliveryStatus={order.delivery_status}
+                onUpdate={onStatusUpdate}
               />
             </div>
 
@@ -89,23 +98,26 @@ const OrdersTable = ({ orders, onStatusUpdate }) => {
               <div className="flex justify-between items-center mt-2">
                 <div className="flex space-x-2">
                   <StatusBadge status={order.delivery_status} type="delivery" />
-                  <PaymentStatus 
-                    status={order.payment_status} 
-                    onUpdate={(statusData) => onStatusUpdate(order.id, statusData)}
+                  <OrderStatusActions 
                     orderId={order.id}
+                    paymentStatus={order.payment_status}
+                    deliveryStatus={order.delivery_status}
+                    onUpdate={onStatusUpdate}
                     mobile
                   />
                 </div>
-                <OrderActions 
-                  status={order.delivery_status} 
-                  onUpdate={(statusData) => onStatusUpdate(order.id, statusData)}
-                  orderId={order.id}
-                />
               </div>
             </div>
           </div>
         ))
       )}
+      {/* Modal */}
+          {selectedOrder && (
+            <OrderDetailsModal 
+              order={selectedOrder} 
+              onClose={() => setSelectedOrder(null)} 
+            />
+          )}
     </div>
   );
 };

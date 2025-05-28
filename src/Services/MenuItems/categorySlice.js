@@ -16,30 +16,12 @@ export const fetchCategories = createAsyncThunk(
   }
 );
 
-// Add new category
+// Add new category (only mutation allowed)
 export const addNewCategory = createAsyncThunk(
   'categories/addNewCategory',
-  async (categoryData) => {
-    const response = await api.post('/store/categories/', categoryData);
+  async (categoryTitle) => {
+    const response = await api.post('/store/categories/', { title: categoryTitle });
     return response.data;
-  }
-);
-
-// Update category
-export const updateExistingCategory = createAsyncThunk(
-  'categories/updateCategory',
-  async ({ id, ...categoryData }) => {
-    const response = await api.patch(`/store/categories/${id}/`, categoryData);
-    return response.data;
-  }
-);
-
-// Delete category
-export const deleteExistingCategory = createAsyncThunk(
-  'categories/deleteCategory',
-  async (categoryId) => {
-    await api.delete(`/store/categories/${categoryId}/`);
-    return categoryId;
   }
 );
 
@@ -67,25 +49,14 @@ const categorySlice = createSlice({
         state.status = 'succeeded';
         state.categories.push(action.payload);
       })
-      .addCase(updateExistingCategory.fulfilled, (state, action) => {
-        const index = state.categories.findIndex(
-          cat => cat.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.categories[index] = action.payload;
-        }
-      })
-      .addCase(deleteExistingCategory.fulfilled, (state, action) => {
-        state.categories = state.categories.filter(
-          cat => cat.id !== action.payload
-        );
+      .addCase(addNewCategory.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
       });
   }
 });
 
 export const selectAllCategories = (state) => state.categories.categories;
-export const selectCategoryById = (state, categoryId) => 
-  state.categories.categories.find(cat => cat.id === categoryId);
 export const selectCategoriesStatus = (state) => state.categories.status;
 export const selectCategoriesError = (state) => state.categories.error;
 

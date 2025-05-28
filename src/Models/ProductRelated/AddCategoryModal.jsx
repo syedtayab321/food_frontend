@@ -1,22 +1,35 @@
 import React, { useState } from 'react';
 import { FaTimes, FaUtensils } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
+// import { addNewCategory } from '../../features/categories/categoriesSlice';
+import { addNewCategory } from '../../Services/MenuItems/categorySlice';
 
-const AddCategoryModal = ({ isOpen, onClose, onAddCategory }) => {
+const AddCategoryModal = ({ isOpen, onClose }) => {
   const [categoryName, setCategoryName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!categoryName) return;
     
-    const newCategory = {
-      id: categoryName.toLowerCase().replace(/\s+/g, '-'),
-      name: categoryName,
-      icon: <FaUtensils />
-    };
+    setIsLoading(true);
+    setError(null);
     
-    onAddCategory(newCategory);
-    setCategoryName('');
-    onClose();
+    try {
+      const resultAction = await dispatch(addNewCategory(categoryName));
+      if (addNewCategory.fulfilled.match(resultAction)) {
+        setCategoryName('');
+        onClose();
+      } else if (addNewCategory.rejected.match(resultAction)) {
+        throw new Error(resultAction.error.message || 'Failed to add category');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -30,6 +43,7 @@ const AddCategoryModal = ({ isOpen, onClose, onAddCategory }) => {
           <button 
             onClick={onClose} 
             className="text-white hover:text-gray-200 transition"
+            disabled={isLoading}
           >
             <FaTimes className="text-lg" />
           </button>
@@ -49,8 +63,15 @@ const AddCategoryModal = ({ isOpen, onClose, onAddCategory }) => {
               placeholder="e.g. Breakfast, Desserts"
               required
               autoFocus
+              disabled={isLoading}
             />
           </div>
+
+          {error && (
+            <div className="mb-4 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
 
           {/* Modal Footer */}
           <div className="flex justify-end gap-3 pt-2">
@@ -58,14 +79,16 @@ const AddCategoryModal = ({ isOpen, onClose, onAddCategory }) => {
               type="button"
               onClick={onClose}
               className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+              disabled={isLoading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+              className="px-5 py-2.5 text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition disabled:opacity-70 disabled:cursor-not-allowed"
+              disabled={isLoading}
             >
-              Add Category
+              {isLoading ? 'Adding...' : 'Add Category'}
             </button>
           </div>
         </form>

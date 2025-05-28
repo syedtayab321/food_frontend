@@ -125,6 +125,7 @@ const AddItemModal = ({
   };
 
   const dispatch = useDispatch();
+  
 const handleSubmit = async (e) => {
   e.preventDefault();
   
@@ -141,17 +142,19 @@ const handleSubmit = async (e) => {
     formDataToSend.append('unit_price', formData.unit_price);
     formDataToSend.append('inventory', formData.inventory);
     formDataToSend.append('category', formData.category);
-   // formDataToSend.append('vendor', 1); // Default vendor ID
+    // formDataToSend.append('vendor', 1); // Default vendor ID if needed
 
-    // Handle image upload
-    if (formData.images.length > 0 && formData.images[0].file) {
-      formDataToSend.append('image', formData.images[0].file);
-    }
+    // Handle image upload - append each image file with the 'images' field name
+    formData.images.forEach((imageObj, index) => {
+      if (imageObj.file) {
+        formDataToSend.append(`images`, imageObj.file); // Note: using 'images' as field name
+      }
+    });
 
     if (isEditing && initialData) {
       await dispatch(updateMenuItem({
         id: initialData.id,
-        formData: formDataToSend  // Changed from 'data' to 'formData'
+        formData: formDataToSend
       })).unwrap();
       toast.success('Item updated successfully!');
     } else {
