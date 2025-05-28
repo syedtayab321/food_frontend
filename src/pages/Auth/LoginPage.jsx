@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import { FaEnvelope, FaLock, FaArrowRight } from 'react-icons/fa';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginUser } from '../../Services/Auth/authSlice';
+import { loginUser,fetchUserData,checkSellerStatus } from '../../Services/Auth/authSlice';
 
 const VendorLogin = () => {
   const initialValues = {
@@ -28,24 +28,49 @@ const VendorLogin = () => {
   });
 
   const onSubmit = async (values, { setSubmitting, resetForm }) => {
-    try {
-      const resultAction = await dispatch(loginUser({
-        email: values.email,
-        password: values.password
-      }));
-  
-      if (loginUser.fulfilled.match(resultAction)) {
-        resetForm();
-        navigate('/admin-access');
+  try {
+    // 1. First login the user
+    const loginResult = await dispatch(loginUser({
+      email: values.email,
+      password: values.password
+    }));
+
+    if (loginUser.fulfilled.match(loginResult)) {
+      resetForm();
+      
+      // 2. Fetch user data after successful login
+      const userDataResult = await dispatch(fetchUserData());
+      
+      if (fetchUserData.fulfilled.match(userDataResult)) {
+        // 3. Check seller status
+        const sellerStatusResult = await dispatch(checkSellerStatus());
+        
+        if (checkSellerStatus.fulfilled.match(sellerStatusResult)) {
+          if (sellerStatusResult.payload.isSeller) {
+            navigate('/dashboard');
+          } else {
+            navigate('/dashboard');
+          }
+        } else {
+          // Handle seller status check failure
+          console.error('Failed to check seller status:', sellerStatusResult.payload || sellerStatusResult.error.message);
+          navigate('/'); // Fallback navigation
+        }
       } else {
-        console.error('Login failed:', resultAction.payload || resultAction.error.message);
+        // Handle user data fetch failure
+        console.error('Failed to fetch user data:', userDataResult.payload || userDataResult.error.message);
+        navigate('/'); // Return to login
       }
-    } catch (err) {
-      console.error('Unexpected error during login:', err);
-    } finally {
-      setSubmitting(false);
+    } else {
+      // Handle login failure
+      console.error('Login failed:', loginResult.payload || loginResult.error.message);
     }
-  };
+  } catch (err) {
+    console.error('Unexpected error during login:', err);
+  } finally {
+    setSubmitting(false);
+  }
+};
   
 
   const CustomInput = ({ field, form, icon, ...props }) => (
