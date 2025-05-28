@@ -39,7 +39,7 @@ const AdminAccessPage = () => {
           <p className="text-center text-sm text-gray-500 mt-4">
             Already a seller?{' '}
             <button 
-              onClick={() => navigate('/login')} 
+              onClick={() => navigate('/')} 
               className="text-red-600 hover:text-red-700 font-medium cursor-pointer"
             >
               Login here
