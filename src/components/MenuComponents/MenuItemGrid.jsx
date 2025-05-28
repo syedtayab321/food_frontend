@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-
+import { BASE_URL } from '../../Api/apiConfig';
 const MenuItemsGrid = ({ items, onEditItem, onDeleteItem }) => {
   if (items.length === 0) {
     return (
@@ -10,41 +10,36 @@ const MenuItemsGrid = ({ items, onEditItem, onDeleteItem }) => {
     );
   }
 
-  // Function to handle image errors
-  const handleImageError = (e) => {
-    e.target.onerror = null;
-    e.target.src = 'https://placehold.co/300x200?text=No+Image';
-    e.target.className = 'w-full h-40 object-contain bg-gray-100';
-  };
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
       {items.map((item) => {
-        // Get the first image from the images array if it exists
-        const itemImage = item.images?.length > 0 ? item.images[0].image : null;
-        
+        // Get the first image if available
+        const imageUrl = item.images?.length > 0 
+          ? `${BASE_URL || ''}${item.images[0].image}`
+          : null;
+
         return (
           <div
             key={item.id}
             className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition"
           >
-            {itemImage ? (
+            {imageUrl ? (
               <img 
-                src={itemImage} 
+                src={imageUrl} 
                 alt={item.title} 
                 className="w-full h-40 object-cover"
-                onError={handleImageError}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/300x200?text=No+Image';
+                }}
               />
             ) : (
               <div className="h-40 bg-gray-200 flex items-center justify-center text-gray-500">
-                <img 
-                  src="https://placehold.co/300x200?text=No+Image" 
-                  alt="Placeholder" 
-                  className="w-full h-full object-contain"
-                />
+                No Image
               </div>
             )}
             <div className="p-4">
+              {/* Rest of your card content remains the same */}
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg">{item.title}</h3>
                 <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm">
