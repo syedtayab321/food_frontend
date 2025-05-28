@@ -24,6 +24,7 @@ export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
   async ({ orderId, statusData }, { rejectWithValue }) => {
     const token = localStorage.getItem('authToken');
+    console.log(statusData)
     try {
       const response = await api.patch(
         `/store/orders/${orderId}/update_status/?as=seller`,

@@ -13,11 +13,16 @@ const OrdersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState("all");
+  const [dateRangeFilter, setDateRangeFilter] = useState({ start: null, end: null });
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
 
-  useEffect(() => {
+  const fetchOrders = () => {
     dispatch(fetchVendorOrders());
+  };
+
+  useEffect(() => {
+    fetchOrders();
   }, [dispatch]);
 
   const filteredOrders = orders.filter(order => {
@@ -38,17 +43,38 @@ const OrdersPage = () => {
       deliveryStatusFilter === "all" || 
       (order.delivery_status?.toLowerCase() === deliveryStatusFilter.toLowerCase());
     
-    return matchesSearch && matchesPaymentStatus && matchesDeliveryStatus;
+    // Date range filter
+    const orderDate = new Date(order.placed_at);
+    const matchesDateRange = 
+      !dateRangeFilter.start || 
+      !dateRangeFilter.end || 
+      (orderDate >= new Date(dateRangeFilter.start) && 
+      (orderDate <= new Date(dateRangeFilter.end)));
+    
+    return matchesSearch && matchesPaymentStatus && matchesDeliveryStatus && matchesDateRange;
+  });
+
+  // Always sort by latest first (placed_at descending, then id descending)
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    const dateA = new Date(a.placed_at);
+    const dateB = new Date(b.placed_at);
+    
+    // First sort by date (newest first)
+    if (dateB.getTime() !== dateA.getTime()) {
+      return dateB - dateA;
+    }
+    // If dates are equal, sort by ID (higher IDs first)
+    return b.id - a.id;
   });
 
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const currentOrders = sortedOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalPages = Math.ceil(sortedOrders.length / ordersPerPage);
 
   const handleStatusUpdate = (orderId, statusData) => {
-    dispatch(updateOrderStatus({ orderId, ...statusData })).then(() => {
-      dispatch(fetchVendorOrders());
+    dispatch(updateOrderStatus({ orderId, statusData })).then(() => {
+      fetchOrders();
     });
   };
 
@@ -56,7 +82,13 @@ const OrdersPage = () => {
     setSearchQuery("");
     setPaymentStatusFilter("all");
     setDeliveryStatusFilter("all");
+    setDateRangeFilter({ start: null, end: null });
     setCurrentPage(1);
+  };
+
+  const handleRefresh = () => {
+    setCurrentPage(1);
+    fetchOrders();
   };
 
   return (
@@ -64,7 +96,7 @@ const OrdersPage = () => {
       <OrdersHeader
         title="Orders Management"
         description="Track and manage customer orders"
-        onRefresh={() => dispatch(fetchVendorOrders())}
+        onRefresh={handleRefresh}
         isRefreshing={loading}
       />
 
@@ -75,8 +107,9 @@ const OrdersPage = () => {
         deliveryStatusFilter={deliveryStatusFilter}
         onStatusFilterChange={setPaymentStatusFilter}
         onDeliveryStatusFilterChange={setDeliveryStatusFilter}
+        dateRangeFilter={dateRangeFilter}
+        onDateRangeFilterChange={setDateRangeFilter}
         onClearFilters={clearAllFilters}
-        orders={orders}
       />
 
       <OrdersTable
@@ -84,8 +117,7 @@ const OrdersPage = () => {
         onStatusUpdate={handleStatusUpdate}
       />
       
-
-      {filteredOrders.length > ordersPerPage && (
+      {sortedOrders.length > ordersPerPage && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
