@@ -52,7 +52,7 @@ export const updateMenuItem = createAsyncThunk(
   'menuItems/updateMenuItem',
   async ({ id, formData }) => {  // Accept FormData directly
     try {
-      const response = await api.put(`store/products/${id}/`, formData, {
+      const response = await api.patch(`store/products/${id}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

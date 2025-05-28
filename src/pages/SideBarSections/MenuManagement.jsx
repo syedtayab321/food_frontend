@@ -199,6 +199,7 @@ const MenuManagementPage = () => {
         onSave={handleAddOrUpdateItem}
         categories={availableCategories}
         initialData={currentItem ? {
+          id: currentItem.id,
           title: currentItem.title,
           description: currentItem.description,
           unit_price: currentItem.unit_price,
