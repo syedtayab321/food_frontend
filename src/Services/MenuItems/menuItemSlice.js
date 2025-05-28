@@ -30,7 +30,11 @@ export const fetchMenuItems = createAsyncThunk(
 export const addMenuItem = createAsyncThunk(
   'menuItems/addMenuItem',
   async (formData) => { 
-     console.log('FormData:', formData); // Log the FormData object
+    //  console.log('FormData:', formData); // Log the FormData object
+     for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+
     try {
       const response = await api.post('store/products/', formData, {
         headers: {
@@ -48,7 +52,7 @@ export const updateMenuItem = createAsyncThunk(
   'menuItems/updateMenuItem',
   async ({ id, formData }) => {  // Accept FormData directly
     try {
-      const response = await api.put(`store/products/${id}/`, formData, {
+      const response = await api.patch(`store/products/${id}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
