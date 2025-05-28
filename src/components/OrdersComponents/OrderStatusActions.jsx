@@ -16,7 +16,7 @@ const OrderStatusActions = ({
   // Payment status mapping
   const paymentStatusMap = {
     'C': { display: 'Paid', type: 'success' },
-    'P': { display: 'Pending', type: 'warning' },
+    'P': { display: 'UnPaid', type: 'warning' },
     'F': { display: 'Failed', type: 'error' }
   };
 
@@ -40,12 +40,12 @@ const OrderStatusActions = ({
     <div className={`flex ${mobile ? "flex-col" : "flex-row items-center"} gap-1`}>
       {/* Payment Status */}
       {paymentStatus !== 'C' && paymentStatus !== 'F' ? (
-        <div className={`flex ${mobile ? "flex-col" : "flex-row items-center"} gap-1`}>
+        <div className={`flex  ${mobile ? "flex-col" : "flex-col items-center"} gap-1`}>
           <StatusBadge status={currentPaymentStatus.display} type="payment" />
           <button
             onClick={handleMarkAsPaid}
             disabled={paymentLoading}
-            className={`flex items-center justify-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200 transition-colors ${mobile ? "h-6" : "h-7"}`}
+            className={`flex items-center justify-center text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200 transition-colors  ${mobile ? "h-6" : "h-7"}`}
           >
             {paymentLoading ? (
               "Processing..."
@@ -60,6 +60,8 @@ const OrderStatusActions = ({
       ) : (
         <StatusBadge status={currentPaymentStatus.display} type="payment" />
       )}
+
+      
 
       {/* Delivery Actions */}
       <div className="relative">
